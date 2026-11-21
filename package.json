@@ -30,7 +30,7 @@
     "test-cases",
     "testRail"
   ],
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "test": "node --test"
   }

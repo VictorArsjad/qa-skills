@@ -103,3 +103,7 @@ The skill keeps a private snapshot and fingerprint of each source, including fet
 The skill sets `disable-model-invocation: true`, so it is user-invoked only: the agent does not run it on its own. Keep that flag when porting it to another runtime that supports it.
 
 Private initiative state lives in `~/.qa-skills/` and is never packaged.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
