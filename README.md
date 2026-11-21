@@ -4,7 +4,13 @@ Agent skills for QA engineers. Work is organised by **initiative**, not by code 
 
 ## Install
 
-A package installer is not published yet. For now:
+```bash
+npx @victorarsjad/qa-skills add create-test-case
+```
+
+This copies the skill into `~/.agents/skills/`. Point it somewhere else with `--path <dir>` or `QA_SKILLS_DIR`. The CLI runs from npm without a global install.
+
+Manual install, if you would rather clone:
 
 ```bash
 git clone git@github.com:VictorArsjad/qa-skills.git
@@ -13,7 +19,7 @@ cp -R qa-skills/skills/create-test-case ~/.agents/skills/
 
 Use the skills directory your agent actually reads. On this machine it is `~/.agents/skills/`.
 
-Planned: an npm CLI so one command installs or updates a skill. See [Packaging](#packaging-planned).
+Once the package is published, `npx` fetches it automatically. Before that, run the CLI from this repo with `node bin/qa-skills.js`.
 
 ## Skills
 
@@ -71,19 +77,26 @@ The skill keeps a private snapshot and fingerprint of each source, including fet
 ```
 .
 ├── README.md
-└── skills/
-    └── create-test-case/
-        └── SKILL.md
+├── package.json
+├── bin/
+│   └── qa-skills.js
+├── skills/
+│   └── create-test-case/
+│       └── SKILL.md
+└── test/
+    └── cli.test.js
 ```
 
-## Packaging (planned)
+## CLI
 
-To make `npx` install possible:
+| Command | What it does |
+| --- | --- |
+| `qa-skills list` | Show bundled skills. |
+| `qa-skills add <skill>` | Copy a skill into the skills directory. Fails if it already exists. |
+| `qa-skills update <skill>` | Overwrite an installed skill with the bundled version. |
+| `qa-skills remove <skill>` | Delete an installed skill. |
+| `qa-skills --version` | Print the package version. |
 
-1. Add `package.json` with a `bin` entry pointing at a small CLI.
-2. Write the CLI to copy a named skill into the agent's skills directory, with an `--agent` or `--path` override.
-3. Publish the package to npm under a public name.
-4. Add versioning and an update path so installed skills can be refreshed.
-5. Document install, update, and uninstall commands in this README.
+`--path <dir>` or `QA_SKILLS_DIR` overrides the default `~/.agents/skills`. `add --force` overwrites without asking. Run the tests with `npm test`.
 
-Private initiative state must never enter the package.
+Private initiative state lives in `~/.qa-skills/` and is never packaged.
