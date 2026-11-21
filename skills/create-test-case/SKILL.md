@@ -34,12 +34,16 @@ An initiative is a unit of QA work: a small feature, a large multi-feature rollo
 - glossary: <optional path>
 - domain_notes: <optional notes derived from past PRDs>
 - sources:
-  - path: <absolute path>          # local file; omit for URL sources
+  - label: <short display name>
+    path: <absolute path>          # local file; omit for URL/pasted sources
     url: <https://...>             # URL source; omit for local files
+    pasted: true                   # pasted source; omit for file/URL
     fetched_at: <ISO timestamp>    # URL sources only
-    fingerprint: sha256:<hash>     # of the saved snapshot text
+    fingerprint: sha256:<hash>     # see algorithm below
     snapshot: <path under ~/.qa-skills/snapshots/>
 ```
+
+Fingerprint means SHA-256 of the UTF-8 text after converting CRLF and CR line endings to LF. Compute it on the exact text saved as the snapshot so two runs agree.
 
 Create the file and the snapshot directory if they do not exist. Ask for preferences once when an initiative is first used. Reuse them on later runs. Update the entry only when the user states a new preference or confirms a source refresh.
 
@@ -49,7 +53,9 @@ Create the file and the snapshot directory if they do not exist. Ask for prefere
 
 Ask for the initiative name if it is not given. Read `~/.qa-skills/initiatives.md`.
 
-- New initiative: ask once for the preferred output format (`markdown`, `csv-text`, or `csv-steps`), an optional glossary path, and optional domain notes. Save the answers under the initiative name.
+Derive a slug from the name for paths and keys: lowercase letters, digits, and hyphens only, with spaces and punctuation collapsed to `-`. Use the original name as the display label. Reject a name whose slug is empty. Never use raw user text as a directory name.
+
+- New initiative: ask once for the preferred output format (`markdown`, `csv-text`, or `csv-steps`), an optional glossary path, and optional domain notes. Save the answers under the slug, with the display label beside it.
 - Known initiative: load its preferences silently. Do not re-ask.
 
 ### 2. Read the source
@@ -70,18 +76,18 @@ Accept pasted text, a local file path, or a URL. Read the whole document. Derive
 
 **Pasted text**
 
-Fingerprint the text and snapshot it. No path or URL is needed.
+Save the pasted text as `~/.qa-skills/snapshots/<initiative-slug>/pasted-<fingerprint-prefix>.txt`, where the prefix is the first 12 hex characters of its fingerprint. Record `label`, `pasted: true`, fingerprint, and snapshot path. No path or URL is needed.
 
 **Fingerprint and refresh**
 
-- Unseen source: save the snapshot, then record path or URL, fingerprint, and snapshot location.
-- Fingerprint changed: show a short summary of what changed against the snapshot, then ask: **regenerate affected scenarios**, **keep existing**, or **review diff first**. Do not regenerate until the user chooses. On regeneration, refresh the snapshot and fingerprint.
+- Unseen source: save the snapshot, then record label, path/URL/pasted, fingerprint, and snapshot location.
+- Fingerprint changed: show a short summary of what changed against the snapshot, then ask: **regenerate affected scenarios**, **keep existing**, or **review diff first**. "Affected" means the buckets tied to the changed requirement; if that mapping is not clear, regenerate all buckets and say so. Do not regenerate until the user chooses. On regeneration, refresh the snapshot and fingerprint.
 - Unchanged: continue without comment.
 - URL fetch failed on refresh: keep the last snapshot, say it could not be checked, and continue with the stored version only if the user agrees.
 
 ### 3. Resolve terms
 
-Check `GLOSSARY.md` or `glossary.md` in the working directory, or the path the user supplied. Use it silently. Do not write new terms into it.
+Check `GLOSSARY.md` or `glossary.md` in the working directory, or the path the user supplied. Use it silently. Do not write new terms into it. If the supplied path does not exist, say so once and continue without a glossary.
 
 Assume sensibly for unclear terms that have a reasonable default, and record each assumption in the output. Ask only when a term would materially change what needs testing and no sensible default exists, or when sources conflict. Batch those few questions into **one** confirmation round. Each item offers exactly two choices:
 
@@ -106,10 +112,10 @@ Finish with an **Open questions** section listing PRD gaps and every assumption 
 ### 5. Emit in the remembered format
 
 - **markdown** (default): one section per bucket, short bullets, permutation axes inline, then Open questions.
-- **csv-text** — TestRail **Test Case (Text)**, one row per case. Headers: `Title,Type,Priority,Preconditions,Steps,Expected Result,Sections`. Put the scenario statement in `Steps` and the observable outcome in `Expected Result`, both at scenario level. No step-by-step.
+- **csv-text** — TestRail **Test Case (Text)**, one row per case. Headers: `Title,Type,Priority,Preconditions,Steps,Expected Result,Sections`. Default `Type: Functional` and `Priority: Medium`; adjust if the user's TestRail uses different values. Put the scenario statement in `Steps` and the observable outcome in `Expected Result`, both at scenario level. No step-by-step. CSV headers stay in English because TestRail requires them, even when the scenario text is in another language.
 - **csv-steps** — TestRail **Test Case (Steps)**, only when the user asks to go deeper or chooses this template. Multi-row layout: the first row carries the standard fields plus the first step and expected result; each later row leaves standard fields blank and fills `Steps` and `Expected Result`. A non-empty `Title` starts a new case.
 
-Offer `csv-steps` as the deeper option when the user wants more detail. If the user's TestRail export uses different header names (for example `Steps (Expected Result)`) or a saved import config, follow theirs instead of these defaults.
+After every `csv-text` generation, offer `csv-steps` as the deeper option. If the user's TestRail export uses different header names (for example `Steps (Expected Result)`) or a saved import config, follow theirs instead of these defaults.
 
 Print output in chat by default. Write a file only when asked.
 

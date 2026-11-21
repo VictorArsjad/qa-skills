@@ -14,10 +14,11 @@ Manual install, if you would rather clone:
 
 ```bash
 git clone git@github.com:VictorArsjad/qa-skills.git
+# or: git clone https://github.com/VictorArsjad/qa-skills.git
 cp -R qa-skills/skills/create-test-case ~/.agents/skills/
 ```
 
-Use the skills directory your agent actually reads. On this machine it is `~/.agents/skills/`.
+Use the skills directory your agent actually reads.
 
 Once the package is published, `npx` fetches it automatically. Before that, run the CLI from this repo with `node bin/qa-skills.js`.
 
@@ -63,7 +64,7 @@ Default output: 5–9 scenario buckets, 1–3 representative cases each, named p
 | Value | Result |
 | --- | --- |
 | `markdown` | Chat output with bucket sections. Default. |
-| `csv-text` | TestRail **Test Case (Text)** — one row per case. Headers `Title,Type,Priority,Preconditions,Steps,Expected Result,Sections`. |
+| `csv-text` | TestRail **Test Case (Text)** — one row per case. Headers `Title,Type,Priority,Preconditions,Steps,Expected Result,Sections`. Defaults: `Type: Functional`, `Priority: Medium`. Headers stay English. |
 | `csv-steps` | TestRail **Test Case (Steps)** — one row per step. Only when you want to go deeper. |
 
 TestRail maps CSV columns in its import wizard. If your export uses different header names or a saved import config, the skill follows yours.
@@ -98,5 +99,7 @@ The skill keeps a private snapshot and fingerprint of each source, including fet
 | `qa-skills --version` | Print the package version. |
 
 `--path <dir>` or `QA_SKILLS_DIR` overrides the default `~/.agents/skills`. `add --force` overwrites without asking. Run the tests with `npm test`.
+
+The skill sets `disable-model-invocation: true`, so it is user-invoked only: the agent does not run it on its own. Keep that flag when porting it to another runtime that supports it.
 
 Private initiative state lives in `~/.qa-skills/` and is never packaged.

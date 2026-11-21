@@ -56,8 +56,9 @@ function parseDescription(skill) {
 function checkName(skill, command) {
   if (!skill) throw new Error(`usage: qa-skills ${command} <skill>`);
   if (!NAME_RE.test(skill)) throw new Error(`invalid skill name: ${skill}`);
-  if (!availableSkills().includes(skill)) {
-    throw new Error(`unknown skill: ${skill}. Available: ${availableSkills().join(', ')}`);
+  const skills = availableSkills();
+  if (!skills.includes(skill)) {
+    throw new Error(`unknown skill: ${skill}. Available: ${skills.join(', ') || 'none'}`);
   }
 }
 
@@ -72,7 +73,7 @@ function add(skill, target, force) {
   const destination = path.join(target, skill);
 
   if (fs.existsSync(destination) && !force) {
-    throw new Error(`${destination} already exists. Use "qa-skills update ${skill}" or --force.`);
+    throw new Error(`${destination} already exists. Use "npx @victorarsjad/qa-skills update ${skill}" or --force.`);
   }
 
   fs.mkdirSync(target, { recursive: true });
@@ -99,6 +100,9 @@ function remove(skill, target) {
   if (!inside(target, destination) || !fs.existsSync(destination)) {
     throw new Error(`${skill} is not installed at ${target}.`);
   }
+  if (!fs.existsSync(path.join(destination, 'SKILL.md'))) {
+    throw new Error(`${destination} is not a skill directory.`);
+  }
 
   fs.rmSync(destination, { recursive: true, force: true });
   console.log(`Removed ${skill} from ${target}`);
@@ -122,11 +126,17 @@ function main() {
   const args = parseArgs(process.argv.slice(2));
 
   switch (args.command) {
-    case 'list':
-      for (const skill of availableSkills()) {
-        console.log(`${skill} — ${parseDescription(skill)}`);
+    case 'list': {
+      const skills = availableSkills();
+      if (skills.length === 0) {
+        console.log('No skills available.');
+      } else {
+        for (const skill of skills) {
+          console.log(`${skill} — ${parseDescription(skill)}`);
+        }
       }
       break;
+    }
     case 'add':
       add(args.skill, args.target, args.force);
       break;
